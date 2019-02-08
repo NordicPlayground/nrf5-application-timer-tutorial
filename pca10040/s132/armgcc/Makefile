@@ -20,6 +20,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/util/app_error.c \
   $(SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
   $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
+  $(SDK_ROOT)/components/libraries/scheduler/app_scheduler.c \
+  $(SDK_ROOT)/components/libraries/timer/app_timer.c \
   $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
   $(SDK_ROOT)/components/libraries/util/nrf_assert.c \
   $(SDK_ROOT)/components/libraries/atomic/nrf_atomic.c \
@@ -51,7 +53,9 @@ SRC_FILES += \
 INC_FOLDERS += \
   $(SDK_ROOT)/components \
   $(SDK_ROOT)/modules/nrfx/mdk \
+  $(SDK_ROOT)/components/libraries/scheduler \
   $(PROJ_DIR) \
+  $(SDK_ROOT)/components/libraries/timer \
   $(SDK_ROOT)/components/libraries/strerror \
   $(SDK_ROOT)/components/softdevice/s132/headers/nrf52 \
   $(SDK_ROOT)/components/toolchain/cmsis/include \
@@ -67,15 +71,15 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/softdevice/s132/headers \
   $(SDK_ROOT)/integration/nrfx/legacy \
   $(SDK_ROOT)/components/libraries/delay \
-  $(SDK_ROOT)/integration/nrfx \
   $(SDK_ROOT)/external/segger_rtt \
+  $(SDK_ROOT)/components/libraries/atomic \
   $(SDK_ROOT)/components/boards \
   $(SDK_ROOT)/components/libraries/memobj \
+  $(SDK_ROOT)/integration/nrfx \
   $(SDK_ROOT)/components/softdevice/common \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
-  $(SDK_ROOT)/components/libraries/log/src \
   $(SDK_ROOT)/external/fprintf \
-  $(SDK_ROOT)/components/libraries/atomic \
+  $(SDK_ROOT)/components/libraries/log/src \
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -97,6 +101,7 @@ CFLAGS += -DNRF52_PAN_74
 CFLAGS += -DNRF_SD_BLE_API_VERSION=6
 CFLAGS += -DS132
 CFLAGS += -DSOFTDEVICE_PRESENT
+CFLAGS += -DSWI_DISABLE0
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
 CFLAGS += -Wall -Werror
@@ -123,6 +128,7 @@ ASMFLAGS += -DNRF52_PAN_74
 ASMFLAGS += -DNRF_SD_BLE_API_VERSION=6
 ASMFLAGS += -DS132
 ASMFLAGS += -DSOFTDEVICE_PRESENT
+ASMFLAGS += -DSWI_DISABLE0
 
 # Linker flags
 LDFLAGS += $(OPT)

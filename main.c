@@ -45,6 +45,25 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
+#include "app_timer.h"
+#include "nrf_drv_clock.h"
+
+
+APP_TIMER_DEF(m_repeated_timer_id);     /**< Handler for repeated timer used to blink LED 1. */
+APP_TIMER_DEF(m_single_shot_timer_id);  /**< Handler for single shot timer used to light LED 2. */
+
+
+/**@brief Function starting the internal LFCLK oscillator.
+ *
+ * @details This is needed by RTC1 which is used by the Application Timer
+ *          (When SoftDevice is enabled the LFCLK is always running and this is not needed).
+ */
+static void lfclk_request(void)
+{
+    ret_code_t err_code = nrf_drv_clock_init();
+    APP_ERROR_CHECK(err_code);
+    nrf_drv_clock_lfclk_request(NULL);
+}
 
 
 /**@brief Button event handler function.
@@ -53,19 +72,27 @@
  */
 void button_event_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
+    ret_code_t      err_code;
+    static uint32_t timeout = 0;
+
     switch (pin)
     {
     case BUTTON_1:
-        // Turn on LED 1.
-        nrf_drv_gpiote_out_clear(LED_1);
+        // Start repeated timer (start blinking LED).
+        err_code = app_timer_start(m_repeated_timer_id, APP_TIMER_TICKS(200), NULL);
+        APP_ERROR_CHECK(err_code);
         break;
     case BUTTON_2:
-        // Turn off LED 1.
-        nrf_drv_gpiote_out_set(LED_1);
+        // Stop the repeated timer (stop blinking LED).
+        err_code = app_timer_stop(m_repeated_timer_id);
+        APP_ERROR_CHECK(err_code);
         break;
     case BUTTON_3:
-        // Turn on LED 2.
-        nrf_drv_gpiote_out_clear(LED_2);
+        // Start single shot timer which turns on LED2 when it expires.
+        // Increase the timeout with 1 second every time.
+        timeout += 1000;
+        err_code = app_timer_start(m_single_shot_timer_id, APP_TIMER_TICKS(timeout), NULL);
+        APP_ERROR_CHECK(err_code);
         break;
     case BUTTON_4:
         // Turn off LED 2.
@@ -127,12 +154,50 @@ static void log_init(void)
 }
 
 
+/**@brief Timeout handler for the repeated timer.
+ */
+static void repeated_timer_handler(void * p_context)
+{
+    nrf_drv_gpiote_out_toggle(LED_1);
+}
+
+
+/**@brief Timeout handler for the single shot timer.
+ */
+static void single_shot_timer_handler(void * p_context)
+{
+    nrf_drv_gpiote_out_clear(LED_2);
+}
+
+
+/**@brief Create timers.
+ */
+static void create_timers()
+{  
+    ret_code_t err_code;
+
+    // Create timers
+    err_code = app_timer_create(&m_repeated_timer_id,
+                                APP_TIMER_MODE_REPEATED,
+                                repeated_timer_handler);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_create(&m_single_shot_timer_id,
+                                APP_TIMER_MODE_SINGLE_SHOT,
+                                single_shot_timer_handler);
+    APP_ERROR_CHECK(err_code);
+}
+
+
 /**@brief Main function.
  */
 int main(void)
 {
     log_init();
     gpio_config();
+    lfclk_request();
+    app_timer_init();
+    create_timers();
 
     NRF_LOG_INFO("Application timer tutorial example started.");
 
