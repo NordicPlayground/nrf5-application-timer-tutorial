@@ -173,7 +173,7 @@ static void single_shot_timer_handler(void * p_context)
 /**@brief Create timers.
  */
 static void create_timers()
-{  
+{
     ret_code_t err_code;
 
     // Create timers
